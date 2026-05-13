@@ -70,7 +70,7 @@ public class AuthService {
         return new AuthResponse(accessToken, refreshToken, toUserResponse(user));
     }
 
-    static UserResponse toUserResponse(User user) {
+    public static UserResponse toUserResponse(User user) {
         return new UserResponse(user.getId(), user.getEmail(), user.getDisplayName(),
             user.getRole(), user.getCreatedAt());
     }

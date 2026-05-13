@@ -9,7 +9,7 @@ import lombok.*;
 @Table(name = "projects")
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class Project extends BaseEntity {
-    @Column(name = "key", unique = true, nullable = false, length = 10)
+    @Column(name = "\"key\"", unique = true, nullable = false, length = 10)
     private String key;
 
     @Column(nullable = false)
