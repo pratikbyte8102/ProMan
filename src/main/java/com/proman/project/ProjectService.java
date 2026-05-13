@@ -101,7 +101,7 @@ public class ProjectService {
     }
 
     public Project findProject(UUID projectId) {
-        return projectRepository.findById(projectId)
+        return projectRepository.findByIdWithOwner(projectId)
             .orElseThrow(() -> new ResourceNotFoundException("Project", projectId));
     }
 

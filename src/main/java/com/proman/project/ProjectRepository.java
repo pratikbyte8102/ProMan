@@ -9,6 +9,9 @@ import java.util.UUID;
 public interface ProjectRepository extends JpaRepository<Project, UUID> {
     boolean existsByKey(String key);
 
-    @Query("SELECT p FROM Project p JOIN ProjectMember pm ON pm.project = p WHERE pm.user.id = :userId")
+    @Query("SELECT p FROM Project p JOIN FETCH p.owner JOIN ProjectMember pm ON pm.project = p WHERE pm.user.id = :userId")
     List<Project> findAllByMemberId(UUID userId);
+
+    @Query("SELECT p FROM Project p JOIN FETCH p.owner WHERE p.id = :id")
+    java.util.Optional<Project> findByIdWithOwner(UUID id);
 }

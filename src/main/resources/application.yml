@@ -2,9 +2,9 @@ spring:
   application:
     name: proman
   datasource:
-    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/proman}
-    username: ${DATABASE_USERNAME:proman}
-    password: ${DATABASE_PASSWORD:proman}
+    url: ${DATABASE_URL:jdbc:postgresql://dpg-d82afbkvikkc73ehtsf0-a.ohio-postgres.render.com/proman_prod}
+    username: ${DATABASE_USERNAME:pratik94313}
+    password: ${DATABASE_PASSWORD:hbgq6GsYjdFQpFxBapWLKXbsE2niNlSX}
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
@@ -26,6 +26,7 @@ jwt:
 
 server:
   port: ${PORT:8080}
+
 
 springdoc:
   api-docs:
