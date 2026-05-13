@@ -1,0 +1,21 @@
+CREATE TABLE issues (
+    id UUID PRIMARY KEY,
+    issue_number INTEGER NOT NULL,
+    project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+    type VARCHAR(20) NOT NULL,
+    title VARCHAR(500) NOT NULL,
+    description TEXT,
+    status_id UUID NOT NULL REFERENCES workflow_statuses(id),
+    priority VARCHAR(20) NOT NULL DEFAULT 'MEDIUM',
+    assignee_id UUID REFERENCES users(id),
+    reporter_id UUID NOT NULL REFERENCES users(id),
+    sprint_id UUID REFERENCES sprints(id),
+    parent_id UUID REFERENCES issues(id),
+    story_points INTEGER,
+    labels TEXT[],
+    version INTEGER NOT NULL DEFAULT 0,
+    search_vector tsvector,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    UNIQUE (project_id, issue_number)
+);

@@ -1,0 +1,9 @@
+CREATE TABLE notifications (
+    id UUID PRIMARY KEY,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    type VARCHAR(50) NOT NULL,
+    issue_id UUID NOT NULL REFERENCES issues(id) ON DELETE CASCADE,
+    actor_id UUID NOT NULL REFERENCES users(id),
+    read BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
