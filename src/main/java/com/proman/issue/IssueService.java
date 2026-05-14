@@ -12,9 +12,12 @@ import com.proman.project.Project;
 import com.proman.project.ProjectService;
 import com.proman.sprint.Sprint;
 import com.proman.sprint.SprintRepository;
+import com.proman.workflow.WorkflowService;
 import com.proman.workflow.WorkflowStatus;
 import com.proman.workflow.WorkflowStatusRepository;
 import com.proman.workflow.StatusCategory;
+import com.proman.workflow.dto.TransitionRequest;
+import com.proman.workflow.dto.TransitionResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -31,6 +34,7 @@ public class IssueService {
     private final UserRepository userRepository;
     private final WorkflowStatusRepository statusRepository;
     private final SprintRepository sprintRepository;
+    private final WorkflowService workflowService;
 
     @Transactional
     public IssueResponse create(UUID projectId, CreateIssueRequest request, User currentUser) {
@@ -79,9 +83,23 @@ public class IssueService {
         return toResponse(issue);
     }
 
-    public CursorPageResponse<IssueResponse> listByProject(UUID projectId, String cursor, int limit) {
+    @Transactional(readOnly = true)
+    public CursorPageResponse<IssueResponse> listByProject(UUID projectId, String cursor, int limit,
+            UUID statusId, UUID assigneeId, UUID sprintId, IssueType type, Priority priority,
+            com.proman.workflow.StatusCategory statusCategory) {
+
+        boolean hasFilters = statusId != null || assigneeId != null || sprintId != null
+            || type != null || priority != null || statusCategory != null;
+
         List<Issue> issues;
-        if (cursor != null) {
+
+        if (hasFilters) {
+            // When filters are applied, use specification-based query with offset pagination
+            var spec = IssueSpecification.withFilters(projectId, statusId, assigneeId,
+                sprintId, type, priority, statusCategory);
+            issues = issueRepository.findAll(spec, PageRequest.of(0, limit + 1)).getContent();
+            issues = new ArrayList<>(issues);
+        } else if (cursor != null) {
             var decoded = CursorUtil.decode(cursor);
             issues = issueRepository.findByProjectIdWithCursor(
                 projectId, decoded.createdAt(), decoded.id(), PageRequest.of(0, limit + 1));
@@ -92,7 +110,7 @@ public class IssueService {
         boolean hasMore = issues.size() > limit;
         if (hasMore) issues = issues.subList(0, limit);
 
-        String nextCursor = hasMore
+        String nextCursor = (!hasFilters && hasMore && !issues.isEmpty())
             ? CursorUtil.encode(issues.get(issues.size() - 1).getCreatedAt(), issues.get(issues.size() - 1).getId())
             : null;
 
@@ -103,6 +121,7 @@ public class IssueService {
         );
     }
 
+    @Transactional(readOnly = true)
     public IssueResponse getById(UUID issueId) {
         return toResponse(findIssue(issueId));
     }
@@ -132,7 +151,38 @@ public class IssueService {
         issueRepository.deleteById(issueId);
     }
 
-    Issue findIssue(UUID issueId) {
+    @Transactional
+    public IssueResponse transition(UUID issueId, TransitionRequest request) {
+        Issue issue = findIssue(issueId);
+        UUID projectId = issue.getProject().getId();
+        UUID currentStatusId = issue.getStatus().getId();
+
+        List<TransitionResponse.AllowedTransition> allowed =
+            workflowService.getAllowedTransitions(projectId, currentStatusId);
+
+        boolean isAllowed = allowed.stream()
+            .anyMatch(t -> t.toStatusId().equals(request.toStatusId()));
+
+        if (!isAllowed) {
+            throw new BusinessRuleException(
+                "Transition from '" + issue.getStatus().getName() + "' to the requested status is not allowed");
+        }
+
+        WorkflowStatus newStatus = statusRepository.findById(request.toStatusId())
+            .orElseThrow(() -> new ResourceNotFoundException("WorkflowStatus", request.toStatusId()));
+        issue.setStatus(newStatus);
+
+        return toResponse(issueRepository.save(issue));
+    }
+
+    @Transactional(readOnly = true)
+    public List<TransitionResponse.AllowedTransition> getAllowedTransitions(UUID issueId) {
+        Issue issue = findIssue(issueId);
+        return workflowService.getAllowedTransitions(
+            issue.getProject().getId(), issue.getStatus().getId());
+    }
+
+    public Issue findIssue(UUID issueId) {
         return issueRepository.findById(issueId)
             .orElseThrow(() -> new ResourceNotFoundException("Issue", issueId));
     }

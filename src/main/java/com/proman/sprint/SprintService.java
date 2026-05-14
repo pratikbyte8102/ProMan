@@ -54,6 +54,10 @@ public class SprintService {
         if (request.goal() != null) sprint.setGoal(request.goal());
         if (request.startDate() != null) sprint.setStartDate(request.startDate());
         if (request.endDate() != null) sprint.setEndDate(request.endDate());
+        if (request.status() != null) {
+            validateStatusTransition(sprint.getStatus(), request.status());
+            sprint.setStatus(request.status());
+        }
         return toResponse(sprintRepository.save(sprint));
     }
 
@@ -63,6 +67,18 @@ public class SprintService {
             throw new ResourceNotFoundException("Sprint", sprintId);
         }
         sprintRepository.deleteById(sprintId);
+    }
+
+    private void validateStatusTransition(SprintStatus current, SprintStatus target) {
+        boolean valid = switch (current) {
+            case PLANNING -> target == SprintStatus.ACTIVE;
+            case ACTIVE -> target == SprintStatus.COMPLETED;
+            case COMPLETED -> false;
+        };
+        if (!valid) {
+            throw new BusinessRuleException(
+                "Cannot transition sprint from " + current + " to " + target);
+        }
     }
 
     public Sprint findSprint(UUID sprintId) {

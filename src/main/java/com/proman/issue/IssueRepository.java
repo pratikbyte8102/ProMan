@@ -8,7 +8,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-public interface IssueRepository extends JpaRepository<Issue, UUID> {
+public interface IssueRepository extends JpaRepository<Issue, UUID>,
+        org.springframework.data.jpa.repository.JpaSpecificationExecutor<Issue> {
 
     @Query("SELECT COALESCE(MAX(i.issueNumber), 0) FROM Issue i WHERE i.project.id = :projectId")
     int findMaxIssueNumber(UUID projectId);

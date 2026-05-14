@@ -44,7 +44,8 @@
       "Bash(kill 33937)",
       "Bash(mvn spring-boot:run -q)",
       "Bash(curl -s http://localhost:8080/actuator/health)",
-      "Bash(xargs kill)"
+      "Bash(xargs kill)",
+      "Bash(mvn compile *)"
     ]
   }
 }

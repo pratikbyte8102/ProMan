@@ -6,7 +6,8 @@ import com.proman.auth.UserRepository;
 import com.proman.common.exception.BusinessRuleException;
 import com.proman.common.exception.ResourceNotFoundException;
 import com.proman.project.dto.*;
-import lombok.RequiredArgsConstructor;
+import com.proman.workflow.WorkflowService;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,12 +15,22 @@ import java.util.List;
 import java.util.UUID;
 
 @Service
-@RequiredArgsConstructor
 public class ProjectService {
 
     private final ProjectRepository projectRepository;
     private final ProjectMemberRepository memberRepository;
     private final UserRepository userRepository;
+    private final WorkflowService workflowService;
+
+    public ProjectService(ProjectRepository projectRepository,
+                          ProjectMemberRepository memberRepository,
+                          UserRepository userRepository,
+                          @Lazy WorkflowService workflowService) {
+        this.projectRepository = projectRepository;
+        this.memberRepository = memberRepository;
+        this.userRepository = userRepository;
+        this.workflowService = workflowService;
+    }
 
     @Transactional
     public ProjectResponse create(CreateProjectRequest request, User currentUser) {
@@ -42,6 +53,9 @@ public class ProjectService {
             .role(ProjectRole.ADMIN)
             .build();
         memberRepository.save(ownerMember);
+
+        // Seed default workflow statuses and transitions
+        workflowService.seedDefaultStatuses(project);
 
         return toResponse(project);
     }

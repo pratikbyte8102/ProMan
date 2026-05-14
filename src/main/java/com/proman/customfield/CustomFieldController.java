@@ -42,6 +42,20 @@ public class CustomFieldController {
         return ResponseEntity.noContent().build();
     }
 
+    // --- Custom Field Values per Issue ---
+
+    @PutMapping("/api/issues/{issueId}/custom-fields")
+    public ResponseEntity<CustomFieldValueResponse> setFieldValue(
+            @PathVariable UUID issueId,
+            @RequestBody SetFieldValueRequest request) {
+        return ResponseEntity.ok(customFieldService.setValue(issueId, request.fieldDefinitionId(), request.value()));
+    }
+
+    @GetMapping("/api/issues/{issueId}/custom-fields")
+    public ResponseEntity<List<CustomFieldValueResponse>> getFieldValues(@PathVariable UUID issueId) {
+        return ResponseEntity.ok(customFieldService.getValues(issueId));
+    }
+
     record CreateFieldRequest(String name, FieldType fieldType, String options, boolean required) {}
     record UpdateFieldRequest(String name, FieldType fieldType, String options, Boolean required) {}
 }
