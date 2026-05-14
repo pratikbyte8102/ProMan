@@ -58,6 +58,11 @@ public class IssueController {
         return ResponseEntity.ok(issueService.update(id, request));
     }
 
+    @DeleteMapping("/api/issues/{id}/sprint")
+    public ResponseEntity<IssueResponse> removeFromSprint(@PathVariable UUID id) {
+        return ResponseEntity.ok(issueService.removeFromSprint(id));
+    }
+
     @DeleteMapping("/api/issues/{id}")
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
         issueService.delete(id);

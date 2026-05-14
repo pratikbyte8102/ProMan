@@ -139,7 +139,18 @@ public class IssueService {
             issue.setAssignee(userRepository.findById(request.assigneeId())
                 .orElseThrow(() -> new ResourceNotFoundException("User", request.assigneeId())));
         }
+        if (request.sprintId() != null) {
+            issue.setSprint(sprintRepository.findById(request.sprintId())
+                .orElseThrow(() -> new ResourceNotFoundException("Sprint", request.sprintId())));
+        }
 
+        return toResponse(issueRepository.save(issue));
+    }
+
+    @Transactional
+    public IssueResponse removeFromSprint(UUID issueId) {
+        Issue issue = findIssue(issueId);
+        issue.setSprint(null);
         return toResponse(issueRepository.save(issue));
     }
 
